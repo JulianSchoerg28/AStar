@@ -43,9 +43,6 @@ def is_solvable(puzzle):
 
     Returns:
     - True if the puzzle is solvable, False otherwise.
-
-    Complexity:
-    - O(n^2), where n is the number of tiles (9 for the 8-puzzle).
     """
     puzzle_numbers = sum(puzzle, [])
     puzzle_numbers.remove(0)  # Ignore the blank tile
@@ -115,10 +112,6 @@ def find_zero(puzzle):
     - A tuple (i, j) where:
         - i: The row index of the blank tile.
         - j: The column index of the blank tile.
-
-    Complexity:
-    - O(n^2), where n is the size of the puzzle (3 for an 8-puzzle).
-      This is because the function performs a nested loop over the puzzle's rows and columns.
     """
     for i in range(len(puzzle)):  # Iterate over each row in the puzzle
         for j in range(len(puzzle[i])):  # Iterate over each column in the current row
@@ -135,9 +128,6 @@ def generate_successors(puzzle):
 
     Returns:
     - A list of successor states (3x3 matrices).
-
-    Complexity:
-    - O(1), as there are at most 4 neighbors for the blank tile.
     """
     successors = []
     zero_pos = find_zero(puzzle)
@@ -166,9 +156,6 @@ def a_star(puzzle, goal_state, heuristic):
 
     Returns:
     - A tuple containing the path cost (g) and the number of expanded nodes.
-
-    Complexity:
-    - O(b^d), where b is the branching factor and d is the depth of the solution.
     """
     open_list = []
     heapq.heappush(open_list, PuzzleState(puzzle, g=0, h=heuristic(puzzle, goal_state)))
