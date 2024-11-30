@@ -2,9 +2,16 @@ import heapq
 import random
 import time
 import numpy as np
+from puzzle_state import PuzzleState  # Import the PuzzleState class
 
 
 def create_random_puzzle():
+    """
+    Generates a random but solvable 8-puzzle.
+
+    Returns:
+    - A 3x3 matrix representing the initial puzzle state.
+    """
     while True:
         numbers = list(range(9))
         random.shuffle(numbers)
@@ -14,6 +21,12 @@ def create_random_puzzle():
 
 
 def get_goal_state_puzzle():
+    """
+    Defines the goal state of the 8-puzzle.
+
+    Returns:
+    - A 3x3 matrix representing the goal state.
+    """
     return [
         [0, 1, 2],
         [3, 4, 5],
@@ -22,8 +35,20 @@ def get_goal_state_puzzle():
 
 
 def is_solvable(puzzle):
+    """
+    Checks if the given puzzle state is solvable.
+
+    Parameters:
+    - puzzle: A 3x3 matrix representing the puzzle state.
+
+    Returns:
+    - True if the puzzle is solvable, False otherwise.
+
+    Complexity:
+    - O(n^2), where n is the number of tiles (9 for the 8-puzzle).
+    """
     puzzle_numbers = sum(puzzle, [])
-    puzzle_numbers.remove(0)
+    puzzle_numbers.remove(0)  # Ignore the blank tile
     inversions = 0
     for i in range(len(puzzle_numbers)):
         for j in range(i + 1, len(puzzle_numbers)):
@@ -33,23 +58,44 @@ def is_solvable(puzzle):
 
 
 def calc_manhattan_distance(puzzle, goal_state):
-    distance = 0
+    """
+    Calculates the Manhattan distance between the puzzle state and the goal state.
 
+    Parameters:
+    - puzzle: The current state of the puzzle as a 3x3 matrix.
+    - goal_state: The goal state of the puzzle as a 3x3 matrix.
+
+    Returns:
+    - The total Manhattan distance as an integer.
+
+    Complexity:
+    - O(n^2), where n is the number of tiles.
+    """
+    distance = 0
     for i in range(len(puzzle)):
         for j in range(len(puzzle)):
             if goal_state[i][j] != puzzle[i][j] and goal_state[i][j] != 0:
-                # oberhalb findet er alle ungleichen
-                # unten sucht er die dann im goalstate array
                 for k in range(len(goal_state)):
                     for l in range(len(goal_state)):
-                        # und wenn er dann die pos im goal state hat, berechnet er die manhattan distance :D
-                        if goal_state[k][l]  == puzzle[i][j]:
+                        if goal_state[k][l] == puzzle[i][j]:
                             distance += abs(k - i) + abs(j - l)
-
     return distance
 
 
 def calc_hamming_distance(puzzle, goal_state):
+    """
+    Calculates the Hamming distance (number of misplaced tiles).
+
+    Parameters:
+    - puzzle: The current state of the puzzle as a 3x3 matrix.
+    - goal_state: The goal state of the puzzle as a 3x3 matrix.
+
+    Returns:
+    - The Hamming distance as an integer.
+
+    Complexity:
+    - O(n^2), where n is the number of tiles.
+    """
     distance = 0
     for i in range(3):
         for j in range(3):
@@ -58,14 +104,51 @@ def calc_hamming_distance(puzzle, goal_state):
     return distance
 
 
+def find_zero(puzzle):
+    """
+    Finds the position of the blank tile (0) in the puzzle.
+
+    Parameters:
+    - puzzle: A 3x3 matrix representing the current state of the puzzle.
+
+    Returns:
+    - A tuple (i, j) where:
+        - i: The row index of the blank tile.
+        - j: The column index of the blank tile.
+
+    Complexity:
+    - O(n^2), where n is the size of the puzzle (3 for an 8-puzzle).
+      This is because the function performs a nested loop over the puzzle's rows and columns.
+    """
+    for i in range(len(puzzle)):  # Iterate over each row in the puzzle
+        for j in range(len(puzzle[i])):  # Iterate over each column in the current row
+            if puzzle[i][j] == 0:  # Check if the current element is the blank tile (0)
+                return (i, j)  # Return the position of the blank tile as (row, column)
+
+
 def generate_successors(puzzle):
+    """
+    Generates all possible successor states of a puzzle.
+
+    Parameters:
+    - puzzle: The current state of the puzzle as a 3x3 matrix.
+
+    Returns:
+    - A list of successor states (3x3 matrices).
+
+    Complexity:
+    - O(1), as there are at most 4 neighbors for the blank tile.
+    """
     successors = []
-    zero_pos = [(i, row.index(0)) for i, row in enumerate(puzzle) if 0 in row][0]
+    zero_pos = find_zero(puzzle)
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
     for direction in directions:
         new_zero_pos = (zero_pos[0] + direction[0], zero_pos[1] + direction[1])
         if 0 <= new_zero_pos[0] < 3 and 0 <= new_zero_pos[1] < 3:
             new_puzzle = [row[:] for row in puzzle]
+            # In Python, you can swap two variables in one line:
+            # a, b = b, a
+            #swap both
             new_puzzle[zero_pos[0]][zero_pos[1]], new_puzzle[new_zero_pos[0]][new_zero_pos[1]] = \
                 new_puzzle[new_zero_pos[0]][new_zero_pos[1]], new_puzzle[zero_pos[0]][zero_pos[1]]
             successors.append(new_puzzle)
@@ -73,48 +156,85 @@ def generate_successors(puzzle):
 
 
 def a_star(puzzle, goal_state, heuristic):
+    """
+    Runs the A* algorithm to solve the puzzle.
+
+    Parameters:
+    - puzzle: The start state of the puzzle as a 3x3 matrix.
+    - goal_state: The goal state of the puzzle as a 3x3 matrix.
+    - heuristic: The heuristic function (Hamming or Manhattan).
+
+    Returns:
+    - A tuple containing the path cost (g) and the number of expanded nodes.
+
+    Complexity:
+    - O(b^d), where b is the branching factor and d is the depth of the solution.
+    """
     open_list = []
-    heapq.heappush(open_list, (0, puzzle, 0))
+    heapq.heappush(open_list, PuzzleState(puzzle, g=0, h=heuristic(puzzle, goal_state)))
     closed_list = set()
     expanded_nodes = 0
 
     while open_list:
-        _, current, cost = heapq.heappop(open_list)
+        current_state = heapq.heappop(open_list)
         expanded_nodes += 1
-        if str(current) in closed_list:
+
+        if str(current_state.puzzle) in closed_list:
             continue
-        closed_list.add(str(current))
+        closed_list.add(str(current_state.puzzle))
 
-        if current == goal_state:
-            return cost, expanded_nodes
+        if current_state.puzzle == goal_state:
+            return current_state.g, expanded_nodes
 
-        for successor in generate_successors(current):
+        for successor in generate_successors(current_state.puzzle):
             if str(successor) not in closed_list:
-                new_cost = cost + 1
-                heuristic_cost = heuristic(successor, goal_state)
-                heapq.heappush(open_list, (new_cost + heuristic_cost, successor, new_cost))
+                new_g = current_state.g + 1
+                h = heuristic(successor, goal_state)
+                neighbor_state = PuzzleState(successor, new_g, h)
+                heapq.heappush(open_list, neighbor_state)
 
 
 def main():
+    """
+    Runs the 8-puzzle simulation with Hamming and Manhattan heuristics.
+    Compares runtime, expanded nodes, and path cost for 100 random puzzles.
+    """
     goal_state = get_goal_state_puzzle()
     puzzles = [create_random_puzzle() for _ in range(100)]
 
     hamming_results = []
     manhattan_results = []
 
-    for puzzle in puzzles:
-        for heuristic, results in [(calc_hamming_distance, hamming_results), (calc_manhattan_distance, manhattan_results)]:
-            start_time = time.time()
-            cost, expanded_nodes = a_star(puzzle, goal_state, heuristic)
-            elapsed_time = time.time() - start_time
-            results.append((cost, expanded_nodes, elapsed_time))
+    hamming_total_time = 0
+    manhattan_total_time = 0
 
-    for name, results in [("Hamming", hamming_results), ("Manhattan", manhattan_results)]:
+    for puzzle in puzzles:
+        # Run A* with Hamming Heuristic
+        start_time = time.time()
+        cost, expanded_nodes = a_star(puzzle, goal_state, calc_hamming_distance)
+        elapsed_time = time.time() - start_time
+        hamming_total_time += elapsed_time
+        hamming_results.append((cost, expanded_nodes, elapsed_time))
+
+        # Run A* with Manhattan Heuristic
+        start_time = time.time()
+        cost, expanded_nodes = a_star(puzzle, goal_state, calc_manhattan_distance)
+        elapsed_time = time.time() - start_time
+        manhattan_total_time += elapsed_time
+        manhattan_results.append((cost, expanded_nodes, elapsed_time))
+
+    # Output results for both heuristics
+    for name, results, total_time in [
+        ("Hamming", hamming_results, hamming_total_time),
+        ("Manhattan", manhattan_results, manhattan_total_time)
+    ]:
         costs, expanded_nodes, times = zip(*results)
         print(f"\n{name} Heuristic:")
-        print(f"Average cost: {np.mean(costs):.2f}, Std Dev: {np.std(costs):.2f}")
-        print(f"Average expanded nodes: {np.mean(expanded_nodes):.2f}, Std Dev: {np.std(expanded_nodes):.2f}")
-        print(f"Average time: {np.mean(times):.4f} seconds, Std Dev: {np.std(times):.4f}")
+        print(f"Total time: {total_time:.4f} seconds")
+        print(f"Average cost: {np.mean(costs):.2f}")
+        print(f"Average expanded nodes: {np.mean(expanded_nodes):.2f}")
+        print(f"Average time: {np.mean(times):.4f} seconds")
+
 
 
 if __name__ == '__main__':
