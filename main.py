@@ -197,7 +197,8 @@ def a_star(puzzle, goal_state, heuristic):
 def main():
     """
     Runs the 8-puzzle simulation with Hamming and Manhattan heuristics.
-    Compares runtime, expanded nodes, and path cost for 100 random puzzles.
+    Measures memory effort (nodes expanded) and runtime for 100 random puzzles.
+    Provides mean and standard deviation of these metrics for each heuristic.
     """
     goal_state = get_goal_state_puzzle()
     puzzles = [create_random_puzzle() for _ in range(100)]
@@ -205,36 +206,68 @@ def main():
     hamming_results = []
     manhattan_results = []
 
-    hamming_total_time = 0
-    manhattan_total_time = 0
-
     for puzzle in puzzles:
         # Run A* with Hamming Heuristic
         start_time = time.time()
         cost, expanded_nodes = a_star(puzzle, goal_state, calc_hamming_distance)
         elapsed_time = time.time() - start_time
-        hamming_total_time += elapsed_time
         hamming_results.append((cost, expanded_nodes, elapsed_time))
 
         # Run A* with Manhattan Heuristic
         start_time = time.time()
         cost, expanded_nodes = a_star(puzzle, goal_state, calc_manhattan_distance)
         elapsed_time = time.time() - start_time
-        manhattan_total_time += elapsed_time
         manhattan_results.append((cost, expanded_nodes, elapsed_time))
 
-    # Output results for both heuristics
-    for name, results, total_time in [
-        ("Hamming", hamming_results, hamming_total_time),
-        ("Manhattan", manhattan_results, manhattan_total_time)
-    ]:
-        costs, expanded_nodes, times = zip(*results)
-        print(f"\n{name} Heuristic:")
-        print(f"Total time: {total_time:.4f} seconds")
-        print(f"Average cost: {np.mean(costs):.2f}")
-        print(f"Average expanded nodes: {np.mean(expanded_nodes):.2f}")
-        print(f"Average time: {np.mean(times):.4f} seconds")
 
+    def main():
+        """
+        Runs the 8-puzzle simulation with Hamming and Manhattan heuristics.
+        Measures total time, memory effort (nodes expanded), runtime for 100 random puzzles.
+        Provides mean and standard deviation of these metrics for each heuristic.
+        """
+        print("Starting the program...")
+        goal_state = get_goal_state_puzzle()
+        puzzles = [create_random_puzzle() for _ in range(100)]
+
+        hamming_results = []
+        manhattan_results = []
+
+        hamming_total_time = 0
+        manhattan_total_time = 0
+
+        for puzzle in puzzles:
+            # Run A* with Hamming Heuristic
+            start_time = time.time()
+            cost, expanded_nodes = a_star(puzzle, goal_state, calc_hamming_distance)
+            elapsed_time = time.time() - start_time
+            hamming_total_time += elapsed_time
+            hamming_results.append((cost, expanded_nodes, elapsed_time))
+
+            # Run A* with Manhattan Heuristic
+            start_time = time.time()
+            cost, expanded_nodes = a_star(puzzle, goal_state, calc_manhattan_distance)
+            elapsed_time = time.time() - start_time
+            manhattan_total_time += elapsed_time
+            manhattan_results.append((cost, expanded_nodes, elapsed_time))
+
+        # Output results for both heuristics
+        for name, results, total_time in [
+            ("Hamming", hamming_results, hamming_total_time),
+            ("Manhattan", manhattan_results, manhattan_total_time)
+        ]:
+            costs, expanded_nodes, times = zip(*results)
+            print(f"\n{name} Heuristic:")
+            print(f"Total time: {total_time:.4f} seconds")  # Total runtime
+            print(f"Average time: {np.mean(times):.4f} seconds")
+            print(f"Standard deviation of time: {np.std(times):.4f} seconds")
+            print(f"Total nodes expanded: {sum(expanded_nodes)}")  # Total nodes expanded
+            print(f"Average nodes expanded: {np.mean(expanded_nodes):.2f}")
+            print(f"Standard deviation of nodes expanded: {np.std(expanded_nodes):.2f}")
+            print(f"Average cost: {np.mean(costs):.2f}")
+
+    if __name__ == '__main__':
+        main()
 
 
 if __name__ == '__main__':
