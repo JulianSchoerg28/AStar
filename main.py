@@ -64,9 +64,6 @@ def calc_manhattan_distance(puzzle, goal_state):
 
     Returns:
     - The total Manhattan distance as an integer.
-
-    Complexity:
-    - O(n^2), where n is the number of tiles.
     """
     distance = 0
     for i in range(len(puzzle)):
@@ -89,9 +86,6 @@ def calc_hamming_distance(puzzle, goal_state):
 
     Returns:
     - The Hamming distance as an integer.
-
-    Complexity:
-    - O(n^2), where n is the number of tiles.
     """
     distance = 0
     for i in range(3):
@@ -113,10 +107,10 @@ def find_zero(puzzle):
         - i: The row index of the blank tile.
         - j: The column index of the blank tile.
     """
-    for i in range(len(puzzle)):  # Iterate over each row in the puzzle
-        for j in range(len(puzzle[i])):  # Iterate over each column in the current row
-            if puzzle[i][j] == 0:  # Check if the current element is the blank tile (0)
-                return (i, j)  # Return the position of the blank tile as (row, column)
+    for i in range(len(puzzle)):
+        for j in range(len(puzzle[i])):
+            if puzzle[i][j] == 0:
+                return (i, j)
 
 
 def generate_successors(puzzle):
